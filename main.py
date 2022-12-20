@@ -2,9 +2,78 @@ import numpy as np
 import pylab
 from PIL import Image
 import matplotlib.pyplot as plt
+import pickle
+
+# -------------------- question 7 -------------------------
+import knn
 
 
-def main():
+def Q7():
+    train_files = ["data_batch_1", "data_batch_2",
+                   "data_batch_3", "data_batch_4", "data_batch_5"]
+    file1 = "data_batch_1"
+    file2 = "test_batch"
+    my_dict_test = unpickle(file2)
+    img_test = my_dict_test[b'data']
+    my_dict_train = unpickle(file1)
+    img_train = my_dict_train[b'data']
+    labels = my_dict_train[b'labels']
+    grayImg_arr_train = grayScale(img_train)
+    grayImg_arr_test = grayScale(img_test)
+
+    u, sigma, v = varianceMatrix(grayImg_arr_train)
+    s_list = [1, 2, 5, 10, 20, 40]
+    k_list = [3, 5, 7]
+    for k in k_list:
+        model = knn.KNN(k)
+        for s in s_list:
+            x_train = transform(grayImg_arr_train, u, s)
+            x_test = transform(grayImg_arr_test, u, s)
+            model.fit(x_train, labels)
+            prediction = model.predict(x_test)
+            accuracy = 
+
+
+def transform(mat, u, s):
+    projection_mat = np.matmul(u[:s], u[:s].T)
+    return np.matmul(projection_mat, mat)
+
+
+def explained_variance_ratio(sigma):
+    T = [1, 2, 5, 10, 20, 40, 100, 250]
+    ratio = [np.sum(sigma[:t] ** 2) / np.sum(sigma ** 2) for t in T]
+    plt.plot(T, ratio, marker='o')
+    plt.xticks(T)
+    plt.show()
+
+
+def grayScale(img):
+    grayImg_arr = np.zeros((10000, 1024))
+    for i, img in enumerate(img):
+        single_img = np.array(img)
+        single_img_reshaped = np.transpose(np.reshape(single_img, (3, 32, 32)), (1, 2, 0))
+        image = Image.fromarray(single_img_reshaped.astype('uint8'))
+        gray_image = image.convert("L")
+        grayimg = np.array(gray_image).flatten()
+        grayImg_arr[i] = grayimg
+    return grayImg_arr
+
+
+def varianceMatrix(mat):
+    variance_mat = (1 / mat.shape[0]) * (mat - np.average(mat, axis=0)).T
+    u, s, v = np.linalg.svd(variance_mat)
+    x = 3
+    return u, s, v
+
+
+def unpickle(file):
+    with open(file, 'rb') as fo:
+        q7_dict = pickle.load(fo, encoding='bytes')
+    return q7_dict
+
+
+# ------------------------- question 6
+def Q6():
     image = Image.open("C://Users//hadar//Desktop//yossi.JPG")
     rgb = Image.Image.split(image)  # list of 3 RGB images
     uL, sL, vL = SVD(rgb)
@@ -51,6 +120,12 @@ def low_rank_approx(uL, sL, vL, k):
 
 def calc_error(s, k):
     return sum(pow(s[k + 1:], 2)) / sum(np.power(s, 2))
+
+
+# -----------------------------
+
+def main():
+    Q7()
 
 
 if __name__ == "__main__":
