@@ -1,32 +1,64 @@
 import numpy as np
 import pylab
 from PIL import Image
+import matplotlib.pyplot as plt
 
-def low_rank_approx(SVD=None, A=None, r=1):
+
+def main():
+    image = Image.open("C://Users//hadar//Desktop//IMG_3636.JPG")
+    rgb = Image.Image.split(image)  # list of 3 RGB images
+    uL, sL, vL = SVD(rgb)
+    k_list = [1000]
+    errors = []
+    for k in k_list:
+        errors.append(calc_error(sL[0], k))
+        rgb_low_rank_arr = low_rank_approx(uL, sL, vL, k)
+        rgb_low_rank_images = [Image.fromarray(arr.astype('uint8')) for arr in rgb_low_rank_arr]
+        low_rank_image = Image.merge('RGB', rgb_low_rank_images)
+        low_rank_image.save(str(k) + "rankImage.png")
+    plt.plot(k_list, errors, marker='o', linestyle='-')
+    plt.xlabel("k-value")
+    plt.ylabel("error")
+    plt.title("error as a function of k")
+    plt.show()
+
+
+def SVD(rgb):
+    uL = []
+    sL = []
+    vL = []
+    for mat in rgb:
+        u, s, v = np.linalg.svd(mat, full_matrices=False)
+        uL.append(u)
+        sL.append(s)
+        vL.append(v)
+    return uL, sL, vL
+
+
+def low_rank_approx(uL, sL, vL, k):
     """
-    Computes an r-rank approximation of a matrix
-    given the component u, s, and v of it's SVD
-    Requires: numpy
+    Computes a k-rank approximation of a matrix
+    given the components u, s, and v of each of its rgb components,
     """
-    if not SVD:
-        SVD = np.linalg.svd(A, full_matrices=False)
-    u, s, v = SVD
-    Ar = np.zeros((u.shape[0], v.shape[1]))
-    for i in range(r):
-        Ar += s[i] * np.outer(u.T[i], v[i])
+    Ar = []
+    for u, s, v in zip(uL, sL, vL):
+        Ar.append(np.zeros((u.shape[0], v.shape[1])))
+        for i in range(k):
+            Ar[-1] += s[i] * np.outer(u.T[i], v[i])
     return Ar
 
+
+def calc_error(s, k):
+    return sum(s[k + 1:]) / sum(s)
+
+
 if __name__ == "__main__":
-    """
-    Test: visualize an r-rank approximation of `lena`
-    for increasing values of r
-    Requires: scipy, matplotlib
-    """
-
-    cat = Image.open(f'cat.jpg')
-    gray_cat = cat.convert("L")
-
-    u, s, v = np.linalg.svd(gray_cat, full_matrices=False)
-    i = 1
-    y = low_rank_approx((u, s, v), r=20)
-    Image.fromarray(y.astype('uint8')).show()
+    main()
+    #
+    # cat = Image.open(f'cat.jpg')
+    # gray_cat = cat.convert("L")
+    #
+    # u, s, v = np.linalg.svd(gray_cat, full_matrices=False)
+    # i = 1
+    # y = low_rank_approx((u, s, v), r=20)
+    # Image.fromarray(y.astype('uint8')).show()
