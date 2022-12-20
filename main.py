@@ -3,6 +3,7 @@ import pylab
 from PIL import Image
 import matplotlib.pyplot as plt
 import pickle
+import pandas as pd
 
 # -------------------- question 7 -------------------------
 import knn
@@ -22,35 +23,40 @@ def Q7():
     grayImg_arr_test = grayScale(img_test)
 
     u, sigma, v = PCA(grayImg_arr_train)
-    s_list = [2, 5, 10, 20, 40, 1024,1]
-    k_list = [3, 5, 7, 15, 37, 45]
+    s_list = [20, 50, 100, 200, 400, 1024]
+    k_list = [15, 115, 505, 2005, 5005]
     errors = {k: [] for k in k_list}
-    models = [knn.KNN(k) for k in k_list]
-    all_data_errors = []
-    # for model in models:
-    #     model.fit(grayImg_arr_train,labels)
-    #     predictions = model.predict(grayImg_arr_test[:10,:])
-    #     all_data_errors.append(errorRate(predictions,my_dict_test[b'labels'][:10]))
+
     for s in s_list:
         x_train = (transform(grayImg_arr_train.T, u, s)).T
         x_test = (transform(grayImg_arr_test.T, u, s)).T
-        for model in models:
-            model.fit(x_train, labels)
-            prediction = np.array(model.predict(x_test[:10, :]))
-            error_rate = errorRate(prediction, my_dict_test[b'labels'][:10])
-            errors[model.k].append(error_rate)
-    # for model in models:
-    #
-    #     errors[model.k] = []
-    #     for s in s_list:
-    #         test1 = u[:, :s]
-    #         test2 = u[:, :s].T
-    #         x_train = (transform(grayImg_arr_train.T, u, s)).T
-    #         x_test = (transform(grayImg_arr_test.T, u, s)).T
-    #         model.fit(x_train, labels)
-    #         prediction = np.array(model.predict(x_test[:10, :]))
-    #         error_rate = errorRate(prediction, my_dict_test[b'labels'])
-    #         errors[model.k].append(error_rate)
+        for k in k_list:
+            model.fit(x_train, labels, k)
+            prediction = np.array(model.predict(x_test[:50, :]))
+            error_rate = errorRate(prediction, my_dict_test[b'labels'][:50])
+            errors[k].append(round(error_rate, 3))  # for model in models:
+
+    # for k in k_list:
+    #     model = KNN(k)
+    #     model.fit(grayImg_arr_train, my_dict_train[b'labels'], k)
+    #     prediction = model.predict(grayImg_arr_test[:50, :])
+    #     error_rate = errorRate(prediction, my_dict_test[b'labels'][:50])
+    #     errors[k].append(round(error_rate, 3))
+
+    for k in k_list:
+        data = errors[k]
+        plt.plot(data, label=f'k={k}', marker='o')
+    plt.xlabel('s')
+    plt.ylabel('error rate')
+    plt.legend()
+    plt.show()
+    error_df = pd.DataFrame.from_dict(errors).transpose()
+    s = [20, 50, 100, 200, 400, 'No PCA']
+    error_df.index = k_list
+    error_df.columns = s
+    # error_df.rename(columns={'0': '20', '1': '50', '2': '100', '3': '200', '4': '400', '5': 'No PCA'})  # s
+    # error_df.rename(index={'0': '15', '1': '115', '2': '505', '3': '2005', '4': '5005'})  # k
+    print(error_df)
 
 
 def transform(mat, u, s):
@@ -83,7 +89,7 @@ def errorRate(y_pred, y_true):
 
 
 def PCA(mat):
-    variance_mat = (1 / mat.shape[0]) * (mat - np.average(mat, axis=0)).T
+    variance_mat = (mat - np.average(mat, axis=0)).T
     u, s, v = np.linalg.svd(variance_mat)
     return u, s, v
 

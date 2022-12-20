@@ -13,7 +13,7 @@ class KNN:
         self.k = k
         self.test_dist_idxs = None
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, k):
         """
         calc mean and std
         :param X_train: calc stats for this param
@@ -22,6 +22,7 @@ class KNN:
         """
         self.X_train = X_train
         self.y_train = y_train
+        self.k = k
 
     def predict(self, X_test):
         pred = []
