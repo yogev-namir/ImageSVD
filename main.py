@@ -27,10 +27,10 @@ def Q7():
     errors = {k: [] for k in k_list}
     models = [knn.KNN(k) for k in k_list]
     all_data_errors = []
-    for model in models:
-        model.fit(grayImg_arr_train,labels)
-        predictions = model.predict(grayImg_arr_test[:10,:])
-        all_data_errors.append(errorRate(predictions,my_dict_test[b'labels'][:10]))
+    # for model in models:
+    #     model.fit(grayImg_arr_train,labels)
+    #     predictions = model.predict(grayImg_arr_test[:10,:])
+    #     all_data_errors.append(errorRate(predictions,my_dict_test[b'labels'][:10]))
     for s in s_list:
         x_train = (transform(grayImg_arr_train.T, u, s)).T
         x_test = (transform(grayImg_arr_test.T, u, s)).T
