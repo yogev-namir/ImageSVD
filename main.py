@@ -26,17 +26,21 @@ def Q7():
     k_list = [3, 5, 7]
     for k in k_list:
         model = knn.KNN(k)
+        errors[k] = []
         for s in s_list:
-            x_train = transform(grayImg_arr_train, u, s)
-            x_test = transform(grayImg_arr_test, u, s)
+            test1 = u[:, :s]
+            test2 = u[:, :s].T
+            x_train = transform(grayImg_arr_train.T, u, s)
+            x_test = transform(grayImg_arr_test.T, u, s)
             model.fit(x_train, labels)
-            prediction = model.predict(x_test)
-            accuracy = 
+            prediction = np.array(model.predict(x_test))
+            error_rate = errorRate(prediction, my_dict_test[b'labels'])
+            errors[k].append(error_rate)
 
 
 def transform(mat, u, s):
-    projection_mat = np.matmul(u[:s], u[:s].T)
-    return np.matmul(projection_mat, mat)
+    # projection_mat = np.matmul(u[:, :s], u[:, :s].T)
+    return np.matmul(u[:, :s].T, mat)
 
 
 def explained_variance_ratio(sigma):
@@ -57,6 +61,7 @@ def grayScale(img):
         grayimg = np.array(gray_image).flatten()
         grayImg_arr[i] = grayimg
     return grayImg_arr
+
 
 
 def varianceMatrix(mat):
