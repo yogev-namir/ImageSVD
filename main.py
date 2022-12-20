@@ -5,17 +5,18 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    image = Image.open("C://Users//hadar//Desktop//IMG_3636.JPG")
+    image = Image.open("C://Users//hadar//Desktop//yossi.JPG")
     rgb = Image.Image.split(image)  # list of 3 RGB images
     uL, sL, vL = SVD(rgb)
-    k_list = [1000]
+    k_list = [5, 10, 20, 30, 40, 50, 100, 200, 300]
     errors = []
     for k in k_list:
         errors.append(calc_error(sL[0], k))
         rgb_low_rank_arr = low_rank_approx(uL, sL, vL, k)
         rgb_low_rank_images = [Image.fromarray(arr.astype('uint8')) for arr in rgb_low_rank_arr]
         low_rank_image = Image.merge('RGB', rgb_low_rank_images)
-        low_rank_image.save(str(k) + "rankImage.png")
+        low_rank_image.save(str(k) + "yossi.png")
+        print("finished f{k}", k)
     plt.plot(k_list, errors, marker='o', linestyle='-')
     plt.xlabel("k-value")
     plt.ylabel("error")
@@ -49,16 +50,8 @@ def low_rank_approx(uL, sL, vL, k):
 
 
 def calc_error(s, k):
-    return sum(s[k + 1:]) / sum(s)
+    return sum(pow(s[k + 1:], 2)) / sum(np.power(s, 2))
 
 
 if __name__ == "__main__":
     main()
-    #
-    # cat = Image.open(f'cat.jpg')
-    # gray_cat = cat.convert("L")
-    #
-    # u, s, v = np.linalg.svd(gray_cat, full_matrices=False)
-    # i = 1
-    # y = low_rank_approx((u, s, v), r=20)
-    # Image.fromarray(y.astype('uint8')).show()
