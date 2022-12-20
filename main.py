@@ -6,7 +6,7 @@ import pickle
 import pandas as pd
 
 # -------------------- question 7 -------------------------
-import knn
+from knn import KNN
 
 
 def Q7():
@@ -16,18 +16,18 @@ def Q7():
     file2 = "test_batch"
     my_dict_test = unpickle(file2)
     img_test = my_dict_test[b'data']
+    grayImg_arr_test = grayScale(img_test)
     my_dict_train = unpickle(file1)
     img_train = my_dict_train[b'data']
     labels = my_dict_train[b'labels']
     grayImg_arr_train = grayScale(img_train)
-    grayImg_arr_test = grayScale(img_test)
-
     u, sigma, v = PCA(grayImg_arr_train)
     s_list = [20, 50, 100, 200, 400, 1024]
     k_list = [15, 115, 505, 2005, 5005]
     errors = {k: [] for k in k_list}
 
     for s in s_list:
+        model = KNN(1)  # default k
         x_train = (transform(grayImg_arr_train.T, u, s)).T
         x_test = (transform(grayImg_arr_test.T, u, s)).T
         for k in k_list:
