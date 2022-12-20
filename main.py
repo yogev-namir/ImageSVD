@@ -21,21 +21,36 @@ def Q7():
     grayImg_arr_train = grayScale(img_train)
     grayImg_arr_test = grayScale(img_test)
 
-    u, sigma, v = varianceMatrix(grayImg_arr_train)
-    s_list = [1, 2, 5, 10, 20, 40]
-    k_list = [3, 5, 7]
-    for k in k_list:
-        model = knn.KNN(k)
-        errors[k] = []
-        for s in s_list:
-            test1 = u[:, :s]
-            test2 = u[:, :s].T
-            x_train = transform(grayImg_arr_train.T, u, s)
-            x_test = transform(grayImg_arr_test.T, u, s)
+    u, sigma, v = PCA(grayImg_arr_train)
+    s_list = [2, 5, 10, 20, 40, 1024,1]
+    k_list = [3, 5, 7, 15, 37, 45]
+    errors = {k: [] for k in k_list}
+    models = [knn.KNN(k) for k in k_list]
+    all_data_errors = []
+    for model in models:
+        model.fit(grayImg_arr_train,labels)
+        predictions = model.predict(grayImg_arr_test[:10,:])
+        all_data_errors.append(errorRate(predictions,my_dict_test[b'labels'][:10]))
+    for s in s_list:
+        x_train = (transform(grayImg_arr_train.T, u, s)).T
+        x_test = (transform(grayImg_arr_test.T, u, s)).T
+        for model in models:
             model.fit(x_train, labels)
-            prediction = np.array(model.predict(x_test))
-            error_rate = errorRate(prediction, my_dict_test[b'labels'])
-            errors[k].append(error_rate)
+            prediction = np.array(model.predict(x_test[:10, :]))
+            error_rate = errorRate(prediction, my_dict_test[b'labels'][:10])
+            errors[model.k].append(error_rate)
+    # for model in models:
+    #
+    #     errors[model.k] = []
+    #     for s in s_list:
+    #         test1 = u[:, :s]
+    #         test2 = u[:, :s].T
+    #         x_train = (transform(grayImg_arr_train.T, u, s)).T
+    #         x_test = (transform(grayImg_arr_test.T, u, s)).T
+    #         model.fit(x_train, labels)
+    #         prediction = np.array(model.predict(x_test[:10, :]))
+    #         error_rate = errorRate(prediction, my_dict_test[b'labels'])
+    #         errors[model.k].append(error_rate)
 
 
 def transform(mat, u, s):
@@ -64,7 +79,7 @@ def grayScale(img):
 
 
 
-def varianceMatrix(mat):
+def PCA(mat):
     variance_mat = (1 / mat.shape[0]) * (mat - np.average(mat, axis=0)).T
     u, s, v = np.linalg.svd(variance_mat)
     x = 3

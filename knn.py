@@ -11,6 +11,7 @@ class KNN:
         self.X_train = None
         self.y_train = None
         self.k = k
+        self.test_dist_idxs = None
 
     def fit(self, X_train, y_train):
         """
@@ -24,8 +25,11 @@ class KNN:
 
     def predict(self, X_test):
         pred = []
-        for x in X_test:
-            indices = self.neighbours_indices(x)  # index's of closest neighbors
+        for i, x in enumerate(X_test):
+            if (self.test_dist_idxs is None) or (i not in self.test_dist_idxs.keys()):
+                indices = self.neighbours_indices(x, i)  # index's of closest neighbors
+            else:
+                indices = self.test_dist_idxs[i][:self.k]  # distances where already computed
             closest_labels = [self.y_train[index] for index in indices]  # labels of closest neighbors
             predicted_label = (mode(closest_labels)).mode[0]
             pred.append(predicted_label)  # get the mode and append to the list
@@ -42,6 +46,11 @@ class KNN:
             dist = KNN.dist(x, sample)
             distances.append(dist)
         idx = np.argsort(np.array(distances))  # get only the first k
+        if self.test_dist_idxs is None:
+            self.test_dist_idxs = dict()
+            self.test_dist_idxs[i] = idx
+        else:
+            self.test_dist_idxs[i] = idx
         return idx[:self.k]
 
     @staticmethod
@@ -53,4 +62,3 @@ class KNN:
         :return: euclidian distance between 2 vectors x1 and x2
         """
         return np.linalg.norm(x1 - x2)
-
