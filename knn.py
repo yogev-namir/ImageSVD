@@ -35,7 +35,7 @@ class KNN:
             pred.append(predicted_label)  # get the mode and append to the list
         return pred
 
-    def neighbours_indices(self, x):
+    def neighbours_indices(self, x, i):
         """
         find indices of k closest neighbors to x
         :param x: the point

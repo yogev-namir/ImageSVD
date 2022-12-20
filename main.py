@@ -78,11 +78,13 @@ def grayScale(img):
     return grayImg_arr
 
 
+def errorRate(y_pred, y_true):
+    return (1 / len(y_true)) * np.sum(y_pred != y_true)
+
 
 def PCA(mat):
     variance_mat = (1 / mat.shape[0]) * (mat - np.average(mat, axis=0)).T
     u, s, v = np.linalg.svd(variance_mat)
-    x = 3
     return u, s, v
 
 
