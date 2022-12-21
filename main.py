@@ -69,18 +69,6 @@ def Q7():
     #     error_rate = errorRate(prediction, my_dict_test[b'labels'][:50])
     #     errors[k].append(round(error_rate, 3))
 
-    for k in k_list:
-        data = errors[k]
-        plt.plot(data, label=f'k={k}', marker='o')
-    plt.xlabel('s')
-    plt.ylabel('error rate')
-    plt.legend()
-    plt.show()
-    error_df = pd.DataFrame.from_dict(errors).transpose()
-    s = [20, 50, 100, 200, 400, 'No PCA']
-    error_df.index = k_list
-    error_df.columns = s
-    print(error_df)
 
 def plot_results(k_list, errors):
     for k in k_list:
@@ -191,9 +179,9 @@ def low_rank_approx(uL, sL, vL, k):
     Computes a k-rank approximation of a matrix
     given the components u, s, and v of each of its rgb components,
     """
-    Ar = []
+    Ak = []
     for u, s, v in zip(uL, sL, vL):
-        Ar.append(np.zeros((u.shape[0], v.shape[1])))
+        Ak.append(np.zeros((u.shape[0], v.shape[1])))
         for i in range(k):
             Ak[-1] += s[i] * np.outer(u.T[i], v[i])
 
