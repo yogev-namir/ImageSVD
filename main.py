@@ -10,31 +10,57 @@ from knn import KNN
 
 
 def Q7():
-    # train_files = ["data_batch_1", "data_batch_2",
-    #                "data_batch_3", "data_batch_4", "data_batch_5"]
-    file1 = "data_batch_1"
-    file2 = "test_batch"
-    my_dict_test = unpickle(file2)
+    train_files = ["data_batch_1", "data_batch_2",
+                   "data_batch_3", "data_batch_4", "data_batch_5"]
+    dict_list = [unpickle(file) for file in train_files]
+    img_train_list = [data_dict[b'data'] for data_dict in dict_list]
+    grayimg_train_list = [grayScale(img) for img in img_train_list]
+    all_train_data_arr = np.concatenate(grayimg_train_list)
+    all_train_labels = []
+    for i in range(5):
+        all_train_labels = all_train_labels + dict_list[i][b'labels']
+    my_dict_test = unpickle("test_batch")
     img_test = my_dict_test[b'data']
-    grayImg_arr_test = grayScale(img_test)
-    my_dict_train = unpickle(file1)
-    img_train = my_dict_train[b'data']
-    labels = my_dict_train[b'labels']
-    grayImg_arr_train = grayScale(img_train)
-    u, sigma, v = PCA(grayImg_arr_train)
+    test_data = grayScale(img_test)
+    test_labels = my_dict_test[b'labels']
+    u, sigma, v = PCA(all_train_data_arr)
     s_list = [20, 50, 100, 200, 400, 1024]
     k_list = [15, 115, 505, 2005, 5005]
-    errors = {k: [] for k in k_list}
-
-    for s in s_list:
-        model = KNN(1)  # default k
-        x_train = (transform(grayImg_arr_train.T, u, s)).T
-        x_test = (transform(grayImg_arr_test.T, u, s)).T
-        for k in k_list:
-            model.fit(x_train, labels, k)
-            prediction = np.array(model.predict(x_test[:50, :]))
-            error_rate = errorRate(prediction, my_dict_test[b'labels'][:50])
-            errors[k].append(round(error_rate, 3))  # for model in models:
+    errors = KNearestNeighbors(s_list, k_list, all_train_data_arr, all_train_labels, test_data, test_labels, u)
+    df_results = plot_results(k_list, errors)
+    print(df_results)
+    # for s in s_list:
+    #     model = KNN(1)  # default k
+    #     x_train = (transform(grayImg_arr_train.T, u, s)).T
+    #     x_test = (transform(grayImg_arr_test.T, u, s)).T
+    #     for k in k_list:
+    #         model.fit(x_train, labels, k)
+    #         prediction = np.array(model.predict(x_test[:50, :]))
+    #         error_rate = errorRate(prediction, my_dict_test[b'labels'][:50])
+    #         errors[k].append(round(error_rate, 3))  # for model in models:
+    # # -------- 1 batch
+    # file1 = "data_batch_1"
+    # file2 = "test_batch"
+    # my_dict_test = unpickle(file2)
+    # img_test = my_dict_test[b'data']
+    # grayImg_arr_test = grayScale(img_test)
+    # my_dict_train = unpickle(file1)
+    # img_train = my_dict_train[b'data']
+    # labels = my_dict_train[b'labels']
+    # grayImg_arr_train = grayScale(img_train)
+    # u, sigma, v = PCA(grayImg_arr_train)
+    # s_list = [20, 50, 100, 200, 400, 1024]
+    # k_list = [15, 115, 505, 2005, 5005]
+    #
+    # for s in s_list:
+    #     model = KNN(1)  # default k
+    #     x_train = (transform(grayImg_arr_train.T, u, s)).T
+    #     x_test = (transform(grayImg_arr_test.T, u, s)).T
+    #     for k in k_list:
+    #         model.fit(x_train, labels, k)
+    #         prediction = np.array(model.predict(x_test[:50, :]))
+    #         error_rate = errorRate(prediction, my_dict_test[b'labels'][:50])
+    #         errors[k].append(round(error_rate, 3))  # for model in models:
 
     # for k in k_list:
     #     model = KNN(k)
@@ -55,6 +81,35 @@ def Q7():
     error_df.index = k_list
     error_df.columns = s
     print(error_df)
+
+def plot_results(k_list, errors):
+    for k in k_list:
+        data = errors[k]
+        plt.plot(data, label=f'k={k}', marker='o')
+    plt.xlabel('s')
+    plt.ylabel('error rate')
+    plt.legend()
+    plt.show()
+    error_df = pd.DataFrame.from_dict(errors).transpose()
+    s = [20, 50, 100, 200, 400, 'No PCA']
+    error_df.index = k_list
+    error_df.columns = s
+    return error_df
+
+
+def KNearestNeighbors(s_list, k_list, train_data, train_labels, test_data, test_labels, u):
+    errors = {k: [] for k in k_list}
+    for s in s_list:
+        model = KNN(1)  # default k
+        x_train = (transform(train_data.T, u, s)).T
+        x_test = (transform(test_data.T, u, s)).T
+        for k in k_list:
+            model.fit(x_train, train_labels, k)
+            prediction = np.array(model.predict(x_test))
+            error_rate = errorRate(prediction, test_labels)
+            errors[k].append(round(error_rate, 3))  # for model in models:
+        print(f"finished {s}")
+    return errors
 
 
 def transform(mat, u, s):
@@ -140,8 +195,9 @@ def low_rank_approx(uL, sL, vL, k):
     for u, s, v in zip(uL, sL, vL):
         Ar.append(np.zeros((u.shape[0], v.shape[1])))
         for i in range(k):
-            Ar[-1] += s[i] * np.outer(u.T[i], v[i])
-    return Ar
+            Ak[-1] += s[i] * np.outer(u.T[i], v[i])
+
+    return Ak
 
 
 def calc_error(s, k):
