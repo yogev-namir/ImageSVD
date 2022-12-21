@@ -10,8 +10,8 @@ from knn import KNN
 
 
 def Q7():
-    train_files = ["data_batch_1", "data_batch_2",
-                   "data_batch_3", "data_batch_4", "data_batch_5"]
+    # train_files = ["data_batch_1", "data_batch_2",
+    #                "data_batch_3", "data_batch_4", "data_batch_5"]
     file1 = "data_batch_1"
     file2 = "test_batch"
     my_dict_test = unpickle(file2)
@@ -54,8 +54,6 @@ def Q7():
     s = [20, 50, 100, 200, 400, 'No PCA']
     error_df.index = k_list
     error_df.columns = s
-    # error_df.rename(columns={'0': '20', '1': '50', '2': '100', '3': '200', '4': '400', '5': 'No PCA'})  # s
-    # error_df.rename(index={'0': '15', '1': '115', '2': '505', '3': '2005', '4': '5005'})  # k
     print(error_df)
 
 
